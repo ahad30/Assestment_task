@@ -1,14 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { FaClock, FaUser, FaTrophy, FaExclamationTriangle } from 'react-icons/fa';
+import toast from 'react-hot-toast';
 
 function HomePage() {
   const [game, setGame] = useState(null);
   const [word, setWord] = useState('');
   const [players, setPlayers] = useState(['Player 1', 'Player 2']);
   const [timer, setTimer] = useState(10);
-  const [notification, setNotification] = useState(null);
   const timerRef = useRef(null);
+  const timeoutTriggered = useRef(false);
 
   // Start a new game
   const startGame = async () => {
@@ -19,7 +20,9 @@ function HomePage() {
       setGame(response.data);
       setTimer(10);
       startTimer();
+      toast.success('Game started!');
     } catch (error) {
+      toast.error('Failed to start game');
       console.error('Error starting game:', error);
     }
   };
@@ -29,6 +32,7 @@ function HomePage() {
     if (!word || !game) return;
     
     try {
+      const currentPlayerName = game.players[game.currentPlayer].name;
       const response = await axios.post(
         `http://localhost:5000/api/games/${game._id}/words`,
         { word, playerIndex: game.currentPlayer }
@@ -36,30 +40,30 @@ function HomePage() {
       setGame(response.data);
       setWord('');
       setTimer(10);
-      setNotification({
-        type: 'success',
-        message: `Nice! ${game.players[game.currentPlayer].name} scored a point!`
+      toast.success(`${currentPlayerName} scored with "${word}"!`, {
+        icon: '🎉',
       });
-      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
-      setNotification({
-        type: 'error',
-        message: error.response?.data?.error || 'Error submitting word'
+      const errorMessage = error.response?.data?.error || 'Error submitting word';
+      toast.error(errorMessage, {
+        icon: '❌',
       });
-      setTimeout(() => setNotification(null), 3000);
     }
   };
 
   // Timer logic
   const startTimer = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    timeoutTriggered.current = false;
     
     setTimer(10);
     timerRef.current = setInterval(() => {
       setTimer(prev => {
         if (prev <= 1) {
-          clearInterval(timerRef.current);
-          handleTimeout();
+          if (!timeoutTriggered.current) {
+            clearInterval(timerRef.current);
+            handleTimeout();
+          }
           return 0;
         }
         return prev - 1;
@@ -68,24 +72,38 @@ function HomePage() {
   };
 
   const handleTimeout = async () => {
-    if (!game) return;
+    if (!game || timeoutTriggered.current) return;
+    timeoutTriggered.current = true;
     
     try {
+      const currentPlayerName = game.players[game.currentPlayer].name;
       const response = await axios.post(
         `http://localhost:5000/api/games/${game._id}/timeout`
       );
       setGame(response.data);
       setTimer(10);
       startTimer();
-      setNotification({
-        type: 'warning',
-        message: `${game.players[game.currentPlayer].name} didn't answer in time! -1 point`
+      toast(`${currentPlayerName} timed out! -1 point`, {
+        icon: '⏰',
+        style: {
+          background: '#fef3c7',
+          color: '#92400e',
+        },
       });
-      setTimeout(() => setNotification(null), 3000);
     } catch (error) {
+      toast.error('Error handling timeout');
       console.error('Error handling timeout:', error);
     }
   };
+
+  // Show warning when time is running low
+  useEffect(() => {
+    if (timer === 5 && game) {
+      toast(`5 seconds left, ${game.players[game.currentPlayer].name}!`, {
+        icon: '⚠️',
+      });
+    }
+  }, [timer, game?.currentPlayer]);
 
   useEffect(() => {
     if (game) {
@@ -98,7 +116,7 @@ function HomePage() {
 
   if (!game) {
     return (
-      <div className="min-h-screen  flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
           <h1 className="text-3xl font-bold text-center text-indigo-700 mb-6">Shiritori Game</h1>
           
@@ -132,17 +150,7 @@ function HomePage() {
   }
 
   return (
-    <div className="min-h-screen  p-4">
-      {notification && (
-        <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-50 p-4 rounded-lg shadow-lg ${
-          notification.type === 'error' ? 'bg-red-100 text-red-800' :
-          notification.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-          'bg-green-100 text-green-800'
-        }`}>
-          {notification.message}
-        </div>
-      )}
-      
+    <div className="min-h-screen p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-center text-indigo-700 mb-2">Shiritori Game</h1>
         
@@ -217,9 +225,20 @@ function HomePage() {
               {game.wordHistory.map((word, index) => (
                 <div 
                   key={index} 
-                  className={`p-2 rounded border`}
+                  className={`p-2 rounded border ${
+                    word === 'TIMEOUT' ? 
+                      'bg-red-50 border-red-200 text-red-700' : 
+                      'bg-gray-50 border-gray-200'
+                  }`}
                 >
-                   {word}
+                  {word === 'TIMEOUT' ? (
+                    <div className="flex items-center">
+                      <FaExclamationTriangle className="mr-1" />
+                      <span>Timeout</span>
+                    </div>
+                  ) : (
+                    word
+                  )}
                 </div>
               ))}
             </div>
