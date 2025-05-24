@@ -6,7 +6,9 @@ const MainLayout = () => {
   return (
     <div>
       <Header />
-      <Outlet />
+      <div className="bg-[#000000] min-h-screen py-28">
+        <Outlet/>
+      </div>
       <Footer />
     </div>
   );
