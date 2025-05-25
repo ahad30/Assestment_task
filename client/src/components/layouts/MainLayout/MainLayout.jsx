@@ -5,11 +5,11 @@ import Footer from "../../common/Footer/Footer";
 const MainLayout = () => {
   return (
     <div>
-      <Header />
-      <div className="bg-[#000000] min-h-screen py-28">
+      {/* <Header /> */}
+      <div className="bg-[#000000] min-h-screen">
         <Outlet/>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

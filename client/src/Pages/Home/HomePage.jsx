@@ -43,11 +43,11 @@ function HomePage() {
 
   // Submit a word
   const submitWord = async () => {
-     if (!word || !game) return;
+     if (!word || !game) return toast.error("Please Enter a word first and then submit");
 
     const isValidWord = await validateWord(word);
     if (!isValidWord) {
-      toast.error("Invalid word", {
+      toast.error("Invalid word, write a meaningful one", {
         icon: "❌",
       });
       setWord("");
@@ -246,10 +246,11 @@ function HomePage() {
               }"`}
               className="flex-1 border border-gray-300 rounded-l px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               onKeyPress={(e) => e.key === "Enter" && submitWord()}
+              
             />
             <button
               onClick={submitWord}
-              className="bg-indigo-600 text-white py-2 px-4 rounded-r hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+              className="bg-indigo-600 text-white py-2 px-4 rounded-r hover:bg-indigo-700 transition duration-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-offset-1"
             >
               Submit
             </button>
