@@ -31,14 +31,14 @@ const gameSchema = new mongoose.Schema({
 const Game = mongoose.model('Game', gameSchema);
 
 // Dictionary API validation
-async function validateWord(word) {
-  try {
-    const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
-    return response.data && response.data[0];
-  } catch (error) {
-    return false;
-  }
-}
+// async function validateWord(word) {
+//   try {
+//     const response = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}`);
+//     return response.data && response.data[0];
+//   } catch (error) {
+//     return false;
+//   }
+// }
 
 // Routes
 app.post('/api/games', async (req, res) => {
@@ -80,13 +80,13 @@ app.post('/api/games/:id/words', async (req, res) => {
     }
 
     // Dictionary validation
-    const isValidWord = await validateWord(word);
-    if (!isValidWord) {
-      game.players[playerIndex].score -= 1;
-      game.lastAction = 'invalid';
-      await game.save();
-      return res.status(400).json({ error: 'Invalid word' });
-    }
+    // const isValidWord = await validateWord(word);
+    // if (!isValidWord) {
+    //   game.players[playerIndex].score -= 1;
+    //   game.lastAction = 'invalid';
+    //   await game.save();
+    //   return res.status(400).json({ error: 'Invalid word' });
+    // }
 
     // Update game state
     game.wordHistory.push(word.toLowerCase());
